@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#160f2b" />
+    <title>Odysseus Taverna · WILD symbol motion</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">✦</div>
+          <div>
+            <p class="eyebrow">Odysseus Taverna</p>
+            <h1>WILD symbol motion lab</h1>
+          </div>
+        </div>
+        <div class="engine-badge"><span class="status-dot"></span> PixiJS runtime</div>
+      </header>
+
+      <section class="workspace" aria-label="Symbol animation preview">
+        <div class="preview-column">
+          <div class="preview-header">
+            <div>
+              <p class="eyebrow">Live preview</p>
+              <h2>Greek fire, tavern energy.</h2>
+            </div>
+            <div class="state-readout" id="stateReadout">IDLE</div>
+          </div>
+          <div class="stage-frame">
+            <div class="stage-glow"></div>
+            <div class="stage-corner corner-tl"></div>
+            <div class="stage-corner corner-tr"></div>
+            <div class="stage-corner corner-bl"></div>
+            <div class="stage-corner corner-br"></div>
+            <canvas id="pixi-canvas" aria-label="Animated Odysseus WILD slot symbol"></canvas>
+            <div class="stage-caption"><span>WILD · 01</span><span id="phaseReadout">breathing loop</span></div>
+          </div>
+          <div class="transport-row">
+            <button class="transport-button" id="replayButton" type="button"><span>↻</span> Replay state</button>
+            <label class="auto-toggle"><input id="autoCycle" type="checkbox" /><span class="toggle-track"></span><span>Auto-cycle</span></label>
+          </div>
+        </div>
+
+        <aside class="control-panel">
+          <div class="panel-intro">
+            <p class="eyebrow">Animation states</p>
+            <p class="panel-copy">Three clean hooks for a reel symbol: settle into place, then celebrate a connection.</p>
+          </div>
+          <div class="state-list" role="tablist" aria-label="Animation states">
+            <button class="state-card is-active" type="button" data-state="idle" role="tab" aria-selected="true">
+              <span class="state-index">01</span><span class="state-name">Idle</span><span class="state-note">soft breathing + glint</span><span class="state-arrow">→</span>
+            </button>
+            <button class="state-card" type="button" data-state="land" role="tab" aria-selected="false">
+              <span class="state-index">02</span><span class="state-name">Land</span><span class="state-note">drop, squash, settle</span><span class="state-arrow">→</span>
+            </button>
+            <button class="state-card" type="button" data-state="connect" role="tab" aria-selected="false">
+              <span class="state-index">03</span><span class="state-name">Connect</span><span class="state-note">gold burst + flourish</span><span class="state-arrow">→</span>
+            </button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="implementation-note">
+            <div class="note-icon">✣</div>
+            <div><strong>Atlas-driven Pixi rig</strong><p>Frame, torso, cape, hair, expressions, laurels, banner, and effects animate as separate <code>Container</code> layers.</p></div>
+          </div>
+          <div class="key-hints"><span><kbd>1</kbd> Idle</span><span><kbd>2</kbd> Land</span><span><kbd>3</kbd> Connect</span></div>
+        </aside>
+      </section>
+
+      <footer class="footer-row"><span>Source: 04_50_17 PM atlas · sliced runtime textures</span><span>15 atlas slices · 3 expression states</span></footer>
+    </main>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.13.2/dist/pixi.min.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

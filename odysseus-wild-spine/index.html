@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Odysseus Taverna · Spine symbol preview</title>
+    <style>
+      :root {
+        --bg: #170d0a;
+        --panel: #24140f;
+        --panel-2: #2f1a12;
+        --line: rgba(244, 196, 110, 0.16);
+        --ink: #f7ead6;
+        --muted: #b89f86;
+        --gold: #f2c46d;
+        --wine: #b2243b;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background: radial-gradient(circle at 30% 20%, #3a1812 0%, transparent 55%), radial-gradient(circle at 80% 90%, #2c0e16 0%, transparent 50%), var(--bg);
+      }
+      .shell { max-width: 1180px; margin: 0 auto; padding: 28px 20px 32px; }
+      header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+      .eyebrow { margin: 0 0 4px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
+      h1 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+      .runtime { color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; }
+      .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; }
+      .stage-wrap { position: relative; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: radial-gradient(circle at 50% 45%, #4a2016 0%, #1d0f0b 70%); min-height: 600px; }
+      #stage { position: absolute; inset: 0; }
+      #stage canvas { display: block; width: 100%; height: 100%; }
+      .hud { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font: 11px ui-monospace, Consolas, monospace; letter-spacing: 0.06em; text-transform: uppercase; pointer-events: none; }
+      .hud b { color: var(--gold); font-weight: 700; }
+      .panel { border: 1px solid var(--line); border-radius: 18px; background: var(--panel); padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+      .group h2 { margin: 0 0 10px; font-size: 11px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; }
+      .symbols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .symbol { padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--panel-2); color: var(--ink); font: 800 14px inherit; letter-spacing: 0.08em; cursor: pointer; }
+      .symbol:hover { border-color: rgba(242, 196, 109, 0.35); }
+      .symbol[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); background: linear-gradient(100deg, rgba(242, 196, 109, 0.18), rgba(178, 36, 59, 0.14)); }
+      .states { display: grid; gap: 8px; }
+      .state { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 2px 10px; width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; background: var(--panel-2); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+      .state:hover { border-color: rgba(242, 196, 109, 0.35); }
+      .state[aria-pressed="true"] { border-color: var(--gold); background: linear-gradient(100deg, rgba(242, 196, 109, 0.18), rgba(178, 36, 59, 0.14)); }
+      .state kbd { grid-row: span 2; color: var(--gold); font: 700 12px ui-monospace, Consolas, monospace; }
+      .state strong { font-size: 15px; }
+      .state span { color: var(--muted); font-size: 12px; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink); }
+      .row + .row { margin-top: 10px; }
+      input[type="range"] { width: 150px; accent-color: var(--gold); }
+      input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--gold); }
+      .button { width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid rgba(242, 196, 109, 0.4); background: transparent; color: var(--gold); font: 700 13px inherit; cursor: pointer; }
+      .button:hover { background: rgba(242, 196, 109, 0.1); }
+      .log { height: 120px; overflow: auto; margin: 0; padding: 10px; border-radius: 10px; background: #160b08; color: var(--muted); font: 11px/1.6 ui-monospace, Consolas, monospace; list-style: none; }
+      .log li b { color: var(--gold); font-weight: 600; }
+      .error { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: #ffb4a8; text-align: center; font-size: 14px; }
+      @media (max-width: 860px) {
+        .layout { grid-template-columns: 1fr; }
+        .stage-wrap { min-height: 72vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <p class="eyebrow">Odysseus Taverna</p>
+          <h1>Slot symbols · Spine rig preview</h1>
+        </div>
+        <div class="runtime">pixi.js 8.20.1 · spine-pixi-v8 4.3.13</div>
+      </header>
+
+      <section class="layout">
+        <div class="stage-wrap">
+          <div id="stage" aria-label="Animated slot symbol"></div>
+          <div class="hud"><span><b id="hudSymbol">wild</b> · <b id="hudState">idle</b></span><span id="hudTime">0.00s</span></div>
+        </div>
+
+        <aside class="panel">
+          <div class="group">
+            <h2>Symbol</h2>
+            <div class="symbols">
+              <button class="symbol" type="button" data-symbol="wild" aria-pressed="true">WILD</button>
+              <button class="symbol" type="button" data-symbol="bonus" aria-pressed="false">BONUS</button>
+            </div>
+          </div>
+
+          <div class="group">
+            <h2>Animation states</h2>
+            <div class="states">
+              <button class="state" type="button" data-state="idle" aria-pressed="true"><kbd>1</kbd><strong>Idle</strong><span data-note="idle"></span></button>
+              <button class="state" type="button" data-state="land" aria-pressed="false"><kbd>2</kbd><strong>Land</strong><span data-note="land"></span></button>
+              <button class="state" type="button" data-state="connect" aria-pressed="false"><kbd>3</kbd><strong>Connect</strong><span data-note="connect"></span></button>
+            </div>
+          </div>
+
+          <div class="group">
+            <h2>Playback</h2>
+            <label class="row">Speed <input id="speed" type="range" min="0.1" max="2" step="0.05" value="1" /></label>
+            <label class="row">Loop Connect <input id="loopConnect" type="checkbox" /></label>
+            <label class="row">Show bones <input id="debug" type="checkbox" /></label>
+            <label class="row">Reel grid (3×3) <input id="grid" type="checkbox" /></label>
+          </div>
+
+          <button class="button" id="demo" type="button">▶ Play spin demo (land → connect)</button>
+
+          <div class="group">
+            <h2>Spine events</h2>
+            <ul class="log" id="log"></ul>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./vendor/pixi-8.20.1.min.js"></script>
+    <script src="./vendor/spine-pixi-v8-4.3.13.min.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>
