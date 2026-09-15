@@ -22,7 +22,7 @@ import os
 import numpy as np
 from PIL import Image
 
-from spine_rig import (Rig, Sheet, fit_part, gen, osc, osc2, render_setup, rgba, rot, rotate, scale, standard_fx,
+from spine_rig import (Rig, Sheet, attach, fit_part, gen, osc, osc2, render_setup, rgba, rot, rotate, scale, standard_fx,
                        translate, twinkle, with_alpha, write_outputs, write_skeleton)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -89,6 +89,7 @@ class Kit:
         self.cache = json.load(open(self.cache_path)) if os.path.exists(self.cache_path) else {}
         self.debug_dir = os.path.join(DEBUG, name)
         self.frame_fit = None
+        self.appear_lock, self.appear_spin = 0.3, True  # appear: when the symbol is complete; spin up from nothing unless split()
         for n, p in standard_fx().items():
             self.parts[n] = p
 
@@ -158,8 +159,8 @@ class Kit:
         atts = {n: f.att() for n, f in fits.items()}
         self._slot(slot, bone, atts, setup or next(iter(atts)), color, blend)
 
-    def clip(self, name, polygon, end):
-        self.items.append(("slot", dict(name=name, bone="symbol", attachments={name: dict(clip=[tuple(p) for p in polygon], end=end)}, setup=name, color=None, blend=None)))
+    def clip(self, name, polygon, end, bone="symbol"):
+        self.items.append(("slot", dict(name=name, bone=bone, attachments={name: dict(clip=[tuple(p) for p in polygon], end=end)}, setup=name, color=None, blend=None)))
 
     def _slot(self, name, bone, attachments, setup, color=None, blend=None):
         self.items.append(("slot", dict(name=name, bone=bone, attachments=attachments, setup=setup, color=color, blend=blend)))
@@ -168,7 +169,8 @@ class Kit:
         self.R.physics(bone, **params)
 
     def add(self, state, bones=None, slots=None, events=None):
-        cur = self.extra[state]
+        """Merge symbol motion into a state. idle/land/connect always exist; any other state (e.g. appear) is created on first use."""
+        cur = self.extra.get(state, {})
         self.extra[state] = merge_anim(cur, {"bones": bones or {}, "slots": slots or {}, "events": events or []})
 
     # ---------------------------------------------------------------- template animations
@@ -246,6 +248,73 @@ class Kit:
             bones[f"spk{idx}"] = b
         return {"bones": bones, "slots": slots, "events": [{"time": 0.32, "name": "cheer"}]}
 
+    def anim_appear(self):
+        """Symbol arrives on the reel. It spins up from nothing, unless split() made it slide in as two halves.
+
+        Flash, rays and sparkles fire at `appear_lock`, the moment the symbol is complete.
+        """
+        k, P, L = self.k, self.palette, self.appear_lock
+        sweep = self.size * 0.75
+        bones = {
+            "fx": {"scale": scale((0, 0.5, 0.5, None), (L - 0.02, 0.5, 0.5, "out"), (L + 0.7, 1.25, 1.25, None)), "rotate": rotate((0, 0, None), (L - 0.02, 0, "out"), (L + 1.0, 40, None))},
+            "shine": {"translate": translate((0, -sweep, 0, None), (L + 0.3, -sweep, 0, "inout"), (L + 0.7, sweep, 0, None))},
+        }
+        if self.appear_spin:
+            bones["symbol"] = {"scale": scale((0, 0, 0, "back"), (L, 1.08, 1.08, "inout"), (L + 0.16, 0.97, 0.97, "inout"), (L + 0.32, 1, 1, None)),
+                               "rotate": rotate((0, -24, "out"), (L + 0.06, 3, "inout"), (L + 0.26, 0, None))}
+        slots = {
+            "fx_rays": {"rgba": rgba((0, P["rays"] + "00", None), (L - 0.04, P["rays"] + "00", "out"), (L + 0.04, P["rays"] + "e0", "soft"), (L + 0.8, P["rays"] + "00", None))},
+            "frame_flash": {"rgba": rgba((0, P["flash"] + "00", None), (L - 0.02, P["flash"] + "00", "out"), (L + 0.02, P["flash"] + "90", "soft"), (L + 0.4, P["flash"] + "00", None))},
+            "front_glow": {"rgba": rgba((0, P["front"] + "00", None), (L - 0.02, P["front"] + "00", "out"), (L + 0.01, P["front"] + "60", "soft"), (L + 0.3, P["front"] + "00", None))},
+            "shine": {"rgba": rgba((0, P["shine"] + "00", None), (L + 0.3, P["shine"] + "00", "soft"), (L + 0.4, P["shine"] + "d0", "linear"), (L + 0.6, P["shine"] + "d0", "in"), (L + 0.7, P["shine"] + "00", None))},
+        }
+        for n, (idx, dt) in enumerate(((1, 0), (4, 0.04), (5, 0.06), (2, 0.12), (3, 0.16), (6, 0.22), (7, 0.26), (8, 0.32))):
+            s, b = twinkle(self._sparkle_color(n), L + dt, 0.5, peak=1.0, spin=140, grow=1.1)
+            slots[f"sparkle{idx}"] = {"rgba": s}
+            bones[f"spk{idx}"] = b
+        return {"bones": bones, "slots": slots, "events": [{"time": L, "name": "appear"}, {"time": max(1.2, L + 0.84), "name": "settled"}]}
+
+    def split(self, p0, p1, bone_a="half_a", bone_b="half_b", distance=0.25):
+        """Appear for split medallions: the frame is cut along the line p0-p1 (the slash) into two halves.
+
+        The halves slide together along that line and lock at `appear_lock`. `bone_a` carries the upper-left half,
+        arriving from the lower-left; `bone_b` the lower-right half, arriving from the upper-right. Parent each
+        half's parts to its bone. The cut frames only exist during appear: at rest the whole frame is shown.
+        """
+        (x0, y0), (x1, y1) = p0, p1
+        dx, dy = x1 - x0, y1 - y0
+        length = math.hypot(dx, dy)
+        dx, dy = dx / length, dy / length
+        if dy > 0:  # travel direction points up-right (ref y is down)
+            dx, dy = -dx, -dy
+        nx, ny = dy, -dx  # normal towards the upper-left side
+        far = self.size * 2
+        mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+        a0, a1 = (mx - dx * far, my - dy * far), (mx + dx * far, my + dy * far)
+        poly_a = [a0, a1, (a1[0] + nx * far, a1[1] + ny * far), (a0[0] + nx * far, a0[1] + ny * far)]
+        poly_b = [a0, a1, (a1[0] - nx * far, a1[1] - ny * far), (a0[0] - nx * far, a0[1] - ny * far)]
+        idx = next(i for i, (_, kw) in enumerate(self.items) if kw["name"] == "frame") + 1
+        half = lambda name, bone, atts: ("slot", dict(name=name, bone=bone, attachments=atts, setup=None, color=None, blend=None))
+        self.items[idx:idx] = [
+            half("clip_a", bone_a, {"clip_a": dict(clip=poly_a, end="frame_a")}), half("frame_a", bone_a, {"frame": self.frame_fit.att()}),
+            half("clip_b", bone_b, {"clip_b": dict(clip=poly_b, end="frame_b")}), half("frame_b", bone_b, {"frame": self.frame_fit.att()}),
+        ]
+        self.appear_spin = False
+        L, D = self.appear_lock, self.size * distance
+        over = 0.04 * D
+
+        def slide(sign):  # sign -1: start lower-left and travel up-right; +1: the opposite. Spine y is up.
+            sx, sy = sign * dx * D, sign * dy * D
+            ox, oy = -sign * dx * over, -sign * dy * over
+            return translate((0, sx, -sy, "in"), (L, ox, -oy, "out"), (L + 0.14, 0, 0, None))
+
+        swap = L + 0.14
+        self.add("appear", bones={bone_a: {"translate": slide(-1)}, bone_b: {"translate": slide(+1)}}, slots={
+            "frame": {"attachment": attach((0, None), (swap, "frame"))},
+            "frame_a": {"attachment": attach((0, "frame"), (swap, None))}, "frame_b": {"attachment": attach((0, "frame"), (swap, None))},
+            "clip_a": {"attachment": attach((0, "clip_a"), (swap, None))}, "clip_b": {"attachment": attach((0, "clip_b"), (swap, None))},
+        })
+
     # ---------------------------------------------------------------- build
     def _finish_slots(self):
         k, P = self.k, self.parts
@@ -290,12 +359,16 @@ class Kit:
         render_setup(self.R, os.path.join(self.debug_dir, "setup.png"), self.ref, off=(70, 70), size=(w + 140, h + 140))
         self._shrink_textures()
         k = self.k
-        skeleton = write_skeleton(self.R, f"odysseus-{self.name}-v1", ("impact", "cheer", "settled"),
-                                  bounds=(-260 * k, -250 * k, 520 * k, 500 * k))
+        events = ("impact", "cheer", "settled") + (("appear",) if "appear" in self.extra else ())
+        skeleton = write_skeleton(self.R, f"odysseus-{self.name}-v1", events, bounds=(-260 * k, -250 * k, 520 * k, 500 * k))
         skeleton["animations"] = {
             "idle": merge_anim(self.anim_idle(), self.extra["idle"]),
             "land": merge_anim(self.anim_land(), self.extra["land"]),
             "connect": merge_anim(self.anim_connect(), self.extra["connect"]),
         }
+        for state, extra in self.extra.items():
+            if state not in skeleton["animations"]:
+                base = self.anim_appear() if state == "appear" else {}
+                skeleton["animations"][state] = merge_anim(base, extra)
         used = {a["part"].name for s in self.R.slots for a in s["attachments"].values() if "part" in a}
         write_outputs(f"odysseus_{self.name}", ASSETS, [p for n, p in self.parts.items() if n in used], skeleton)

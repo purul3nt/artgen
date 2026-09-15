@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "4180", "--directory", "odysseus-wild-spine"],
       "port": 4180
+    },
+    {
+      "name": "slushrush-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/hanna/Documents/GitHub/Spin & Summon/SlushRush/node_modules/vite/bin/vite.js", "C:/Users/hanna/Documents/GitHub/Spin & Summon/SlushRush", "--port", "5199", "--strictPort"],
+      "port": 5199
     }
   ]
 }

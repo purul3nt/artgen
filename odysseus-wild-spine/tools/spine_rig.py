@@ -213,6 +213,31 @@ def feather_bottom(part, x_from, x_to, depth=18):
     part.rgba[..., 3] = a.astype(np.uint8)
 
 
+def raster_ref(att, size, off=(0, 0)):
+    """Draw one placed attachment into a ref-space canvas (the coordinates the rig is described in)."""
+    return np.asarray(draw_attachment(Image.new("RGBA", size, (0, 0, 0, 0)), att, off))
+
+
+def face_patch(name, att, ellipse, size, feather=10):
+    """Cut the inner face out of one expression drawing, so only the features swap.
+
+    Swapping whole head drawings makes the hair and silhouette pop: every generated
+    expression redraws them slightly differently. Keeping one head plate and laying a
+    feathered ellipse of eyes/nose/mouth over it keeps the hair rock steady.
+    `ellipse` is (cx, cy, rx, ry, rotation) in ref pixels; the part comes back in ref space.
+    """
+    cx, cy, rx, ry, rotation = ellipse
+    w, h = size
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    t = math.radians(rotation)
+    u = ((xx - cx) * math.cos(t) + (yy - cy) * math.sin(t)) / rx
+    v = (-(xx - cx) * math.sin(t) + (yy - cy) * math.cos(t)) / ry
+    mask = np.clip((1.0 - np.sqrt(u * u + v * v)) * max(rx, ry) / feather, 0, 1)
+    rgba = raster_ref(att, size).astype(np.float32)
+    rgba[..., 3] *= mask
+    return trim(name, np.clip(rgba, 0, 255).astype(np.uint8), 0, 0)
+
+
 def skin_mask(rgb):
     r, g, b = [rgb[..., i].astype(np.float32) + 1 for i in range(3)]
     gr, br = g / r, b / r

@@ -1,0 +1,15 @@
+{
+  "model": "MiniMax-H3",
+  "duration": 5,
+  "resolution": "2K",
+  "reference_type": "first_frame",
+  "input_image": {
+    "url": "https://matrix-internal.oss-us-east-1.aliyuncs.com/user_file_upload_tmp%2F2026-09-15%2F2ba940e3-671c-45d6-95f9-243922794311.jpg?x-oss-credential=LTAI5t9dXq2sLrMZ8f1XfiFZ%2F20260915%2Fus-east-1%2Foss%2Faliyun_v4_request&x-oss-date=20260915T064853Z&x-oss-expires=3600&x-oss-signature=fa2d34a1acf2b515429c52ad098f03b16d90eaaafe92a2f1fffaf1d8c649660e&x-oss-signature-version=OSS4-HMAC-SHA256",
+    "mime_type": "image/jpeg"
+  },
+  "last_frame_image": {
+    "url": "https://matrix-internal.oss-us-east-1.aliyuncs.com/user_file_upload_tmp%2F2026-09-15%2F2ba940e3-671c-45d6-95f9-243922794311.jpg?x-oss-credential=LTAI5t9dXq2sLrMZ8f1XfiFZ%2F20260915%2Fus-east-1%2Foss%2Faliyun_v4_request&x-oss-date=20260915T064853Z&x-oss-expires=3600&x-oss-signature=fa2d34a1acf2b515429c52ad098f03b16d90eaaafe92a2f1fffaf1d8c649660e&x-oss-signature-version=OSS4-HMAC-SHA256",
+    "mime_type": "image/jpeg"
+  },
+  "prompt": "FL2VA:\nHow the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; Picture 2 (from Shot 1) aligns with the 5.00-second mark of the target video.\n\nintegrated_multimodal_description: [Shot 1] A medium close-up, eye-level portrait of a muscular Greek warrior — Odysseus — leaning casually against a weathered oak wine barrel piled high with dusty purple grape clusters, set inside a warm dimly-lit Mycenaean tavern. He wears a flowing crimson cape edged with gold Greek-key trim draped over his left shoulder and pooled behind his back, a gold-and-crimson bronze cuirass with a polished lion-head belt buckle, dark leather pteruges, black-and-gold arm bracers, and golden greaves on bare muscular legs. His long sun-blonde hair falls past his shoulders, crowned by a laurel wreath whose dark green leaves are dotted with deep crimson leaves; he grins a confident, slightly wicked grin with full white teeth, eyes bright and amused. The camera holds steady in a Static Shot framing him from mid-thigh up, with the barrel filling the lower right and the warm tavern interior softly blurred behind. Over the five-second beat he stays exactly where he is: his chest rises and falls with a slow easy breath, the laurel leaves and long blonde hair drift and settle with each breath, the cape breathes with the same rhythm and its gold trim catches shifting warm torchlight, a single loose grape on the bunch jiggles almost imperceptibly, and his grin holds — never fading, never breaking. The five seconds ends exactly on the same confident grin and pose it began with.\n\noverall_soundscape: Warm Mycenaean tavern ambience: low murmur of distant conversation, the soft creak of wooden beams and barrels, a faint clatter of clay mugs from a back table, the gentle pop and settle of grape skins against wood, and a slow exhale from the warrior.\n\nnon_diegetic_music: N/A"
+}

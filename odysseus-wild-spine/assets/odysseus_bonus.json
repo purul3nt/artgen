@@ -187,6 +187,10 @@
    "attachment": "bust_smile"
   },
   {
+   "name": "face",
+   "bone": "body"
+  },
+  {
    "name": "goblet",
    "bone": "goblet",
    "attachment": "goblet"
@@ -425,22 +429,24 @@
       "scaleY": 0.92,
       "width": 254,
       "height": 321
+     }
+    },
+    "face": {
+     "face_laugh": {
+      "x": -0.5,
+      "y": 99.5,
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "width": 111,
+      "height": 109
      },
-     "bust_laugh": {
-      "x": 19.81,
-      "y": 109.09,
-      "scaleX": 0.89,
-      "scaleY": 0.89,
-      "width": 261,
-      "height": 337
-     },
-     "bust_wink": {
-      "x": 9.5,
-      "y": 105.91,
-      "scaleX": 0.89,
-      "scaleY": 0.89,
-      "width": 251,
-      "height": 324
+     "face_wink": {
+      "x": -0.5,
+      "y": 99.5,
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "width": 111,
+      "height": 109
      }
     },
     "goblet": {
@@ -1295,11 +1301,11 @@
     }
    },
    "slots": {
-    "bust": {
+    "face": {
      "attachment": [
       {
        "time": 0,
-       "name": "bust_smile"
+       "name": null
       }
      ]
     },
@@ -2706,15 +2712,15 @@
     }
    },
    "slots": {
-    "bust": {
+    "face": {
      "attachment": [
       {
        "time": 0,
-       "name": "bust_laugh"
+       "name": "face_laugh"
       },
       {
        "time": 0.55,
-       "name": "bust_smile"
+       "name": null
       }
      ]
     },
@@ -5310,23 +5316,23 @@
     }
    },
    "slots": {
-    "bust": {
+    "face": {
      "attachment": [
       {
        "time": 0,
-       "name": "bust_smile"
+       "name": null
       },
       {
        "time": 0.16,
-       "name": "bust_laugh"
+       "name": "face_laugh"
       },
       {
        "time": 1.22,
-       "name": "bust_wink"
+       "name": "face_wink"
       },
       {
        "time": 1.5,
-       "name": "bust_smile"
+       "name": null
       }
      ]
     },

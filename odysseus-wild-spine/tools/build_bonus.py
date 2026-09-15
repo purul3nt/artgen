@@ -11,9 +11,9 @@ import os
 import numpy as np
 from PIL import Image
 
-from spine_rig import (Rig, Sheet, attach, centered, feather_bottom, keep_largest, osc, osc2, place, remap_alpha,
-                       render_onion, render_setup, rgba, rotate, scale, standard_fx, translate, trim, twinkle,
-                       write_outputs, write_skeleton, zoom)
+from spine_rig import (Rig, Sheet, attach, centered, face_patch, feather_bottom, keep_largest, osc, osc2, place,
+                       raster_ref, remap_alpha, render_setup, rgba, rotate, scale, standard_fx, translate, trim,
+                       twinkle, write_outputs, write_skeleton, zoom)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -24,6 +24,8 @@ NAME = "odysseus_bonus"
 ORIGIN = (197.0, 199.0)
 PINK = "ffc4ee"
 GOLD = "fff2c0"
+REF = (392, 400)      # ref-space canvas the expression plates are rasterised into
+FACE = (204.0, 200.0, 54.0, 52.0, -20.0)  # eyes/nose/mouth ellipse, tilted with her head
 
 # The empty frame sits 357.5 px right of the finished symbol on the sheet (same y).
 FRAME_DX = -357.5
@@ -72,6 +74,23 @@ def chained(box1_tl, anchor1, at1, s1, reg_tl, reg_s, box2_tl):
     """Anchor/at/scale for a part registered against part 1's box (reg_tl, reg_s in box-1 coordinates)."""
     base = (box1_tl[0] + reg_tl[0] - anchor1[0], box1_tl[1] + reg_tl[1] - anchor1[1])
     return box2_tl, (at1[0] + s1 * base[0], at1[1] + s1 * base[1]), s1 * reg_s
+
+
+def render_faces(bust, faces, path):
+    """The one head plate, then each face patch laid over it, to check the seams."""
+    base = raster_ref(bust, REF)
+    tiles = [base]
+    for a in faces.values():
+        layer = raster_ref(a, REF).astype(np.float32)
+        out = base.astype(np.float32).copy()
+        w = layer[..., 3:4] / 255.0
+        out[..., :3] = layer[..., :3] * w + out[..., :3] * (1 - w)
+        out[..., 3] = np.maximum(out[..., 3], layer[..., 3])
+        tiles.append(np.clip(out, 0, 255).astype(np.uint8))
+    canvas = Image.new("RGB", (REF[0] * len(tiles), REF[1]), (40, 40, 40))
+    for i, t in enumerate(tiles):
+        canvas.paste(Image.fromarray(t).convert("RGB"), (i * REF[0], 0), Image.fromarray(t))
+    canvas.save(path)
 
 
 def build():
@@ -133,6 +152,15 @@ def build():
     for name, reg_tl, reg_s, box_tl in (("bust_laugh", (6, 9), 0.965, (958, 45)), ("bust_wink", (-1, 15), 0.970, (1200, 55))):
         anchor, at, s = chained((712, 45), smile_anchor, smile_at, smile_s, reg_tl, reg_s, box_tl)
         busts[name] = place(P[name], anchor, at, s)
+    # Only her face swaps. Each expression redraws the hair, the head laurel and the
+    # earrings slightly differently, so swapping whole busts made the hair jump every
+    # time the expression changed; the smile bust stays put and carries all of that.
+    for name in ("laugh", "wink"):
+        P[f"face_{name}"] = face_patch(f"face_{name}", busts[f"bust_{name}"], FACE, REF)
+    faces = {n: centered(P[n], P[n].center_sheet, 1.0) for n in ("face_laugh", "face_wink")}
+    for name in ("bust_laugh", "bust_wink"):
+        del P[name]  # only cut to lift the face off; the full plates never reach the atlas
+    busts = {"bust_smile": busts["bust_smile"]}
 
     hidden = "ffffff00"
     R.slot("fx_rays", "fx", {"rays": centered(P["rays"], ORIGIN, 1.9)}, "rays", color="ffb8e800", blend="additive")
@@ -143,6 +171,7 @@ def build():
     R.slot("laurel_l", "laurel_l", {"laurel_l": place(P["laurel_l"], (620, 583), laurel_l_at, 0.78, rotation=6)}, "laurel_l")
     R.slot("laurel_r", "laurel_r", {"laurel_r": place(P["laurel_r"], (790, 583), laurel_r_at, 0.78, rotation=-6)}, "laurel_r")
     R.slot("bust", "body", busts, "bust_smile")
+    R.slot("face", "body", faces)  # empty in setup: the smile lives on the bust plate
     R.slot("goblet", "goblet", {"goblet": place(P["goblet"], (430, 585), goblet_at, 0.78)}, "goblet")
     R.slot("splash_1", "splash", {"splash_b": centered(P["splash_b"], (splash_at[0] + 4, splash_at[1] - 30), 0.5)}, "splash_b", color=hidden)
     R.slot("splash_2", "splash2", {"splash_a": centered(P["splash_a"], (splash_at[0] + 22, splash_at[1] - 20), 0.42, rotation=25)}, "splash_a", color=hidden)
@@ -164,7 +193,7 @@ def build():
     ref = S.rgba[0:392, 0:385]
     render_setup(R, os.path.join(DEBUG, "setup.png"), ref)
     render_setup(R, os.path.join(DEBUG, "setup_fx.png"), ref, reveal={"splash_1", "splash_2"})
-    render_onion(busts, ("bust_smile", "bust_laugh", "bust_wink"), os.path.join(DEBUG, "busts_onion.png"), off=(-20, 0), size=(400, 380))
+    render_faces(busts["bust_smile"], faces, os.path.join(DEBUG, "faces.png"))
     Image.fromarray(P["frame"].rgba).save(os.path.join(DEBUG, "frame_rebuilt.png"))
     zoom(os.path.join(DEBUG, "setup.png"), (90, 70 + 120, 90 + 380, 70 + 340), 3, os.path.join(DEBUG, "setup_lower_zoom.png"))
 
@@ -196,7 +225,7 @@ def anim_idle():
         "shine": {"translate": translate((0, -200, 0, None), (2.7, -200, 0, "inout"), (3.3, 200, 0, None))},
     }
     slots = {
-        "bust": {"attachment": attach((0, "bust_smile"))},
+        "face": {"attachment": attach((0, None))},  # clear a face left over from land/connect
         "back_glow": {"rgba": rgba((0, "ff8ad840", "inout"), (T / 2, "ff8ad870", "inout"), (T, "ff8ad840", None))},
         "banner_shine": {"rgba": rgba((0, "fff3c400", None), (2.7, "fff3c400", "soft"), (2.88, "fff3c4d0", "linear"), (3.15, "fff3c4d0", "in"), (3.3, "fff3c400", None))},
         "medal_glow": {"rgba": rgba((0, "ffffff00", "inout"), (0.9, "ffffff00", "inout"), (1.3, "ffffff66", "inout"), (1.8, "ffffff00", None))},
@@ -235,7 +264,7 @@ def anim_land():
         "shine": {"translate": translate((0, -200, 0, None), (0.22, -200, 0, "inout"), (0.62, 200, 0, None))},
     }
     slots = {
-        "bust": {"attachment": attach((0, "bust_laugh"), (0.55, "bust_smile"))},
+        "face": {"attachment": attach((0, "face_laugh"), (0.55, None))},
         "fx_rays": {"rgba": rgba((0, "ffb8e800", None), (0.11, "ffb8e800", "out"), (0.16, "ffb8e8cc", "soft"), (0.75, "ffb8e800", None))},
         "frame_flash": {"rgba": rgba((0, "ffb0e000", None), (0.11, "ffb0e000", "out"), (0.14, "ffb0e070", "soft"), (0.42, "ffb0e000", None))},
         "medal_glow": {"rgba": rgba((0, "ffffff00", None), (0.12, "ffffff00", "out"), (0.18, "ffffffe6", "soft"), (0.6, "ffffff00", None))},
@@ -297,7 +326,7 @@ def anim_connect():
         "shine": {"translate": translate((0, -200, 0, None), (0.38, -200, 0, "inout"), (0.82, 200, 0, None), (1.02, -200, 0, "inout"), (1.46, 200, 0, None))},
     }
     slots = {
-        "bust": {"attachment": attach((0, "bust_smile"), (0.16, "bust_laugh"), (1.22, "bust_wink"), (1.5, "bust_smile"))},
+        "face": {"attachment": attach((0, None), (0.16, "face_laugh"), (1.22, "face_wink"), (1.5, None))},
         "fx_rays": {"rgba": rgba((0, "ffb8e800", "out"), (0.34, "ffb8e8e0", "inout"), (1.2, "ffb8e899", "inout"), (D, "ffb8e800", None))},
         "frame_flash": {"rgba": rgba((0, "ffb0e000", None), (0.32, "ffb0e000", "out"), (0.36, "ffb0e060", "soft"), (0.72, "ffb0e000", None))},
         "medal_glow": {"rgba": rgba((0, "ffffff00", "out"), (0.36, "fffffff0", "inout"), (0.82, "ffffff55", "inout"), (1.12, "ffffffb0", "inout"), (D, "ffffff00", None))},

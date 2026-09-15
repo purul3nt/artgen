@@ -68,6 +68,27 @@
    "length": 80
   },
   {
+   "name": "hair_l1",
+   "parent": "head",
+   "x": -46.0,
+   "y": 150.0,
+   "length": 50
+  },
+  {
+   "name": "hair_l2",
+   "parent": "head",
+   "x": -50.0,
+   "y": 112.0,
+   "length": 50
+  },
+  {
+   "name": "hair_l3",
+   "parent": "head",
+   "x": -48.0,
+   "y": 72.0,
+   "length": 50
+  },
+  {
    "name": "laurel_l",
    "parent": "symbol",
    "x": -98.0,
@@ -133,7 +154,8 @@
   },
   {
    "name": "spk8",
-   "parent": "fx",
+   "parent": "head",
+   "x": 42.0,
    "y": 55.0
   }
  ],
@@ -183,6 +205,21 @@
    "name": "head",
    "bone": "head",
    "attachment": "head_grin"
+  },
+  {
+   "name": "hair_l1",
+   "bone": "hair_l1",
+   "attachment": "lock_a"
+  },
+  {
+   "name": "hair_l2",
+   "bone": "hair_l2",
+   "attachment": "lock_c"
+  },
+  {
+   "name": "hair_l3",
+   "bone": "hair_l3",
+   "attachment": "lock_b"
   },
   {
    "name": "cape_drape",
@@ -338,6 +375,36 @@
    "strength": 120,
    "damping": 0.85,
    "mass": 1.0
+  },
+  {
+   "name": "hair_l1_physics",
+   "type": "physics",
+   "bone": "hair_l1",
+   "rotate": 0.8,
+   "inertia": 0.5,
+   "strength": 70,
+   "damping": 0.84,
+   "mass": 1.1
+  },
+  {
+   "name": "hair_l2_physics",
+   "type": "physics",
+   "bone": "hair_l2",
+   "rotate": 0.8,
+   "inertia": 0.5,
+   "strength": 70,
+   "damping": 0.84,
+   "mass": 1.1
+  },
+  {
+   "name": "hair_l3_physics",
+   "type": "physics",
+   "bone": "hair_l3",
+   "rotate": 0.8,
+   "inertia": 0.5,
+   "strength": 70,
+   "damping": 0.84,
+   "mass": 1.1
   }
  ],
  "skins": [
@@ -452,6 +519,39 @@
       "scaleY": 0.95,
       "width": 251,
       "height": 272
+     }
+    },
+    "hair_l1": {
+     "lock_a": {
+      "x": 3.75,
+      "y": -30.78,
+      "scaleX": 0.66,
+      "scaleY": 0.66,
+      "rotation": 16.0,
+      "width": 101,
+      "height": 137
+     }
+    },
+    "hair_l2": {
+     "lock_c": {
+      "x": 24.95,
+      "y": -26.45,
+      "scaleX": 0.66,
+      "scaleY": 0.66,
+      "rotation": 8.0,
+      "width": 100,
+      "height": 135
+     }
+    },
+    "hair_l3": {
+     "lock_b": {
+      "x": 0.03,
+      "y": -26.72,
+      "scaleX": 0.62,
+      "scaleY": 0.62,
+      "rotation": 2.0,
+      "width": 120,
+      "height": 127
      }
     },
     "cape_drape": {
@@ -993,6 +1093,150 @@
       {
        "time": 3.2,
        "value": -1.1825
+      }
+     ]
+    },
+    "hair_l1": {
+     "rotate": [
+      {
+       "time": 0.0,
+       "value": -2.0195,
+       "curve": [
+        0.2667,
+        -1.3406,
+        0.5333,
+        0.2393
+       ]
+      },
+      {
+       "time": 0.8,
+       "value": 1.2967,
+       "curve": [
+        1.0667,
+        2.3541,
+        1.3333,
+        2.6985
+       ]
+      },
+      {
+       "time": 1.6,
+       "value": 2.0195,
+       "curve": [
+        1.8667,
+        1.3406,
+        2.1333,
+        -0.2393
+       ]
+      },
+      {
+       "time": 2.4,
+       "value": -1.2967,
+       "curve": [
+        2.6667,
+        -2.3541,
+        2.9333,
+        -2.6985
+       ]
+      },
+      {
+       "time": 3.2,
+       "value": -2.0195
+      }
+     ]
+    },
+    "hair_l2": {
+     "rotate": [
+      {
+       "time": 0.0,
+       "value": -1.9709,
+       "curve": [
+        0.2667,
+        -1.7929,
+        0.5333,
+        -0.692
+       ]
+      },
+      {
+       "time": 0.8,
+       "value": 0.3399,
+       "curve": [
+        1.0667,
+        1.3719,
+        1.3333,
+        2.1489
+       ]
+      },
+      {
+       "time": 1.6,
+       "value": 1.9709,
+       "curve": [
+        1.8667,
+        1.7929,
+        2.1333,
+        0.692
+       ]
+      },
+      {
+       "time": 2.4,
+       "value": -0.3399,
+       "curve": [
+        2.6667,
+        -1.3719,
+        2.9333,
+        -2.1489
+       ]
+      },
+      {
+       "time": 3.2,
+       "value": -1.9709
+      }
+     ]
+    },
+    "hair_l3": {
+     "rotate": [
+      {
+       "time": 0.0,
+       "value": -1.7529,
+       "curve": [
+        0.2667,
+        -1.9671,
+        0.5333,
+        -1.3268
+       ]
+      },
+      {
+       "time": 0.8,
+       "value": -0.409,
+       "curve": [
+        1.0667,
+        0.5089,
+        1.3333,
+        1.5388
+       ]
+      },
+      {
+       "time": 1.6,
+       "value": 1.7529,
+       "curve": [
+        1.8667,
+        1.9671,
+        2.1333,
+        1.3268
+       ]
+      },
+      {
+       "time": 2.4,
+       "value": 0.409,
+       "curve": [
+        2.6667,
+        -0.5089,
+        2.9333,
+        -1.5388
+       ]
+      },
+      {
+       "time": 3.2,
+       "value": -1.7529
       }
      ]
     },

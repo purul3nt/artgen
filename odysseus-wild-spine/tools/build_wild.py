@@ -13,7 +13,7 @@ from PIL import Image
 
 from spine_rig import (Rig, Sheet, attach, centered, feather_bottom, keep_largest, match_skin, osc, osc2, place,
                        remap_alpha, render_onion, render_setup, rgba, rotate, scale, smoothstep, standard_fx, translate,
-                       trim, twinkle, write_outputs, write_skeleton)
+                       trim, twinkle, write_outputs, write_skeleton, zoom)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -70,6 +70,46 @@ def rebuild_frame(S):
     return part
 
 
+def feather_left(part, y_from, y_to, depth=16):
+    """Soften the straight crop line down the left side of a head drawing (sheet rows y_from..y_to)."""
+    a = part.rgba[..., 3].astype(np.float32)
+    for sy in range(y_from, y_to):
+        cy = sy - part.oy
+        if not 0 <= cy < part.h:
+            continue
+        cols = np.nonzero(a[cy] > 8)[0]
+        if len(cols) == 0:
+            continue
+        left = cols.min()
+        c = np.arange(left, min(part.w, left + depth + 1))
+        a[cy, c] *= smoothstep(0, depth, (c - left).astype(np.float32))
+    part.rgba[..., 3] = a.astype(np.uint8)
+
+
+def match_hair(part, ref_rgba):
+    """Shift a part's hair colours (mean/spread per channel) toward a reference hair sample; dark outlines stay."""
+    def hair(rgba):
+        rgb = rgba[..., :3].astype(np.float32)
+        lum = rgb.mean(-1)
+        return (rgba[..., 3] > 200) & (lum > 90) & (rgb[..., 0] > rgb[..., 2] + 30)
+    src = part.rgba[..., :3].astype(np.float32)
+    s = src[hair(part.rgba)]
+    t = ref_rgba[..., :3].astype(np.float32)[hair(ref_rgba)]
+    moved = (src - s.mean(0)) * (t.std(0) / (s.std(0) + 1e-3)) + t.mean(0)
+    lum = src.mean(-1, keepdims=True)
+    w = smoothstep(40, 110, lum)  # keep the ink lines dark
+    part.rgba[..., :3] = np.clip(src * (1 - w) + moved * w, 0, 255).astype(np.uint8)
+
+
+def lock_root(part):
+    """Sheet point at the thick root of a loose hair lock (centre of its top quarter)."""
+    m = part.rgba[..., 3] > 128
+    rows = np.nonzero(m.any(1))[0]
+    top = rows[: max(1, len(rows) // 4)]
+    ys, xs = np.nonzero(m[top.min():top.max() + 1])
+    return part.ox + xs.mean(), part.oy + top.min() + ys.mean()
+
+
 def build():
     os.makedirs(DEBUG, exist_ok=True)
     S = Sheet(SRC)
@@ -85,6 +125,9 @@ def build():
     P["head_roar"] = S.cut("head_roar", (735, 13, 242, 271))
     P["head_grin"] = S.cut("head_grin", (981, 19, 238, 263))
     P["head_snarl"] = S.cut("head_snarl", (1202, 18, 243, 266))
+    P["lock_a"] = S.cut("lock_a", (1104, 287, 90, 128))
+    P["lock_b"] = S.cut("lock_b", (1063, 420, 111, 117))
+    P["lock_c"] = S.cut("lock_c", (1183, 306, 94, 125))
     P["fx_flame"] = S.cut("fx_flame", (812, 842, 636, 244), floor=0, grow=16, min_inside=0.5)
     P["fx_swirl"] = S.cut("fx_swirl", (8, 886, 446, 190), floor=0, grow=14, min_inside=0.5)
     P["fx_swirl2"] = S.cut("fx_swirl2", (470, 915, 400, 160), floor=0, grow=14, min_inside=0.5)
@@ -93,6 +136,15 @@ def build():
     feather_bottom(P["head_roar"], 740, 900)
     feather_bottom(P["head_grin"], 985, 1125)
     feather_bottom(P["head_snarl"], 1206, 1360)
+    # every head drawing is cropped along a straight vertical line down its left side. Only a thin
+    # anti-alias fade: a wide fade made that hair see-through and it read as missing hair.
+    feather_left(P["head_roar"], 95, 240, depth=3)
+    feather_left(P["head_grin"], 95, 235, depth=3)
+    feather_left(P["head_snarl"], 95, 245, depth=3)
+    # the loose locks are painted a warmer brown than his pale blonde hair: match them to the head
+    grin_hair = P["head_grin"].rgba[20:120, 10:110]
+    for name in ("lock_a", "lock_b", "lock_c"):
+        match_hair(P[name], grin_hair)
     grin = P["head_grin"]
     neck_ref = grin.rgba[222 - grin.oy:262 - grin.oy, 1015 - grin.ox:1085 - grin.ox]
     match_skin(P["torso"], (140, 392, 110, 90), neck_ref)
@@ -121,13 +173,20 @@ def build():
     R.bone("torso", "symbol", (190, 300), length=60)
     R.bone("head", "torso", (186, 258), length=90)
     R.bone("cape_drape", "head", (178, 282), length=80)
+    # loose locks tucked behind the head's left crop line: roots hidden under the hair, tips flow out past it
+    # locks drawn over the head's left crop line: roots sit on his hair, tips flow out and down past the cut
+    # locks drawn over the head's left crop line: roots sit on his hair, tips flow out and down past the cut
+    locks = [("hair_l1", "lock_a", (140, 108), 0.66, 16), ("hair_l2", "lock_c", (136, 146), 0.66, 8), ("hair_l3", "lock_b", (138, 186), 0.62, 2)]
+    for bone, _, root, _, _ in locks:
+        R.bone(bone, "head", root, length=50)
     R.bone("laurel_l", "symbol", (92, 336), length=70)
     R.bone("laurel_r", "symbol", (288, 336), length=70)
     R.bone("banner", "symbol", (190, 338))
     R.bone("shine", "banner", (190, 338))
-    sparkle_spots = [(190, 44), (52, 96), (330, 82), (34, 262), (350, 250), (104, 384), (282, 386), (190, 150)]
+    # spark 8 is the gleam on his grin: it sits on the teeth and rides the head bone
+    sparkle_spots = [(190, 44), (52, 96), (330, 82), (34, 262), (350, 250), (104, 384), (282, 386), (228, 203)]
     for i, spot in enumerate(sparkle_spots):
-        R.bone(f"spk{i + 1}", "fx", spot)
+        R.bone(f"spk{i + 1}", "head" if i == 7 else "fx", spot)
 
     # heads share one registration (measured against the finished symbol)
     head_tl = {"head_roar": ((735, 13), (98.0, 34.0), 0.920),
@@ -147,6 +206,8 @@ def build():
     # sits high enough that its shoulders are under the head's (feathered) neck on both sides
     R.slot("torso", "torso", {"torso": place(P["torso"], (192, 420), (186, 244), 0.9)}, "torso")
     R.slot("head", "head", heads, "head_grin")
+    for bone, part, root, s, r in locks:
+        R.slot(bone, bone, {part: place(P[part], lock_root(P[part]), root, s, rotation=r)}, part)
     # The generated head portraits are cropped along a diagonal that chops the left hair and neck;
     # a cape thrown over that shoulder hides the crop line. Parented to the head so it never uncovers it.
     R.slot("cape_drape", "cape_drape", {"cape_drape": place(P["cape_drape"], (70, 690), (178, 282), 0.55, rotation=-34, flip=True)}, "cape_drape")
@@ -167,9 +228,13 @@ def build():
     R.physics("laurel_l", rotate=0.5, inertia=0.5, strength=160, damping=0.8, mass=1.0)
     R.physics("laurel_r", rotate=0.5, inertia=0.5, strength=160, damping=0.8, mass=1.0)
     R.physics("cape_drape", rotate=0.35, inertia=0.5, strength=120, damping=0.85, mass=1.0)
+    for bone, *_ in locks:
+        R.physics(bone, rotate=0.8, inertia=0.5, strength=70, damping=0.84, mass=1.1)
 
     ref = S.rgba[0:392, 0:380]
     render_setup(R, os.path.join(DEBUG, "setup.png"), ref)
+    render_setup(R, os.path.join(DEBUG, "setup_teeth_spark.png"), ref, reveal={"sparkle8"})
+    zoom(os.path.join(DEBUG, "setup.png"), (90 + 40, 70 + 40, 90 + 250, 70 + 320), 3, os.path.join(DEBUG, "left_side_zoom.png"))
     render_onion(heads, ("head_grin", "head_roar", "head_snarl"), os.path.join(DEBUG, "heads_onion.png"))
     Image.fromarray(fr.rgba).save(os.path.join(DEBUG, "frame_rebuilt.png"))
 
@@ -189,6 +254,9 @@ def anim_idle():
         "laurel_l": {"rotate": osc(T, 1.8, phase=0.0)},
         "laurel_r": {"rotate": osc(T, 1.8, phase=math.pi)},
         "cape_drape": {"rotate": osc(T, 1.2, phase=-1.4)},
+        "hair_l1": {"rotate": osc(T, 2.4, phase=-1.0)},
+        "hair_l2": {"rotate": osc(T, 2.0, phase=-1.4)},
+        "hair_l3": {"rotate": osc(T, 1.8, phase=-1.8)},
         "banner": {"translate": osc2(T, 0, 1.6, phase=0.6)},
         "shine": {"translate": translate((0, -210, 0, None), (1.9, -210, 0, "inout"), (2.55, 210, 0, None))},
     }

@@ -36,13 +36,15 @@
       .hud b { color: var(--gold); font-weight: 700; }
       .panel { border: 1px solid var(--line); border-radius: 18px; background: var(--panel); padding: 18px; display: flex; flex-direction: column; gap: 18px; }
       .group h2 { margin: 0 0 10px; font-size: 11px; color: var(--gold); letter-spacing: 0.16em; text-transform: uppercase; }
-      .symbols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .symbol { padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--panel-2); color: var(--ink); font: 800 14px inherit; letter-spacing: 0.08em; cursor: pointer; }
+      .symbols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .symbol { padding: 8px 6px; border-radius: 10px; border: 1px solid transparent; background: var(--panel-2); color: var(--ink); font: 700 11px inherit; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+      .symbol.special { color: var(--gold); }
       .symbol:hover { border-color: rgba(242, 196, 109, 0.35); }
       .symbol[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); background: linear-gradient(100deg, rgba(242, 196, 109, 0.18), rgba(178, 36, 59, 0.14)); }
       .states { display: grid; gap: 8px; }
       .state { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 2px 10px; width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; background: var(--panel-2); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
       .state:hover { border-color: rgba(242, 196, 109, 0.35); }
+      .state[hidden] { display: none; }
       .state[aria-pressed="true"] { border-color: var(--gold); background: linear-gradient(100deg, rgba(242, 196, 109, 0.18), rgba(178, 36, 59, 0.14)); }
       .state kbd { grid-row: span 2; color: var(--gold); font: 700 12px ui-monospace, Consolas, monospace; }
       .state strong { font-size: 15px; }
@@ -81,10 +83,7 @@
         <aside class="panel">
           <div class="group">
             <h2>Symbol</h2>
-            <div class="symbols">
-              <button class="symbol" type="button" data-symbol="wild" aria-pressed="true">WILD</button>
-              <button class="symbol" type="button" data-symbol="bonus" aria-pressed="false">BONUS</button>
-            </div>
+            <div class="symbols" id="symbolList"></div>
           </div>
 
           <div class="group">
@@ -93,6 +92,7 @@
               <button class="state" type="button" data-state="idle" aria-pressed="true"><kbd>1</kbd><strong>Idle</strong><span data-note="idle"></span></button>
               <button class="state" type="button" data-state="land" aria-pressed="false"><kbd>2</kbd><strong>Land</strong><span data-note="land"></span></button>
               <button class="state" type="button" data-state="connect" aria-pressed="false"><kbd>3</kbd><strong>Connect</strong><span data-note="connect"></span></button>
+              <button class="state" type="button" data-state="appear" aria-pressed="false" hidden><kbd>4</kbd><strong>Appear</strong><span data-note="appear"></span></button>
             </div>
           </div>
 
