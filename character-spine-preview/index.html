@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Interactive PixiJS preview for the wine reveler Spine animation rig." />
+    <title>Wine Reveler · Spine animation review</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Spine 4.3 · PixiJS 8</p>
+          <h1>Wine Reveler</h1>
+        </div>
+        <div class="status">Articulated arm · revision 3</div>
+      </header>
+
+      <section class="workspace">
+        <div class="stage-card">
+          <div id="stage" aria-label="Animated wine reveler preview"></div>
+          <div class="stage-noise"></div>
+          <div class="stage-topline">
+            <span id="nowPlaying">IDLE</span>
+            <span id="playState">PLAYING</span>
+          </div>
+          <div class="timeline" aria-hidden="true"><span id="progress"></span></div>
+          <div class="timecode" id="timecode">00:00.000 / 00:04.000</div>
+          <div class="error" id="error" hidden></div>
+        </div>
+
+        <aside class="controls">
+          <section>
+            <div class="section-heading"><h2>Animations</h2><span>1–3</span></div>
+            <div class="animation-list">
+              <button class="animation active" type="button" data-animation="idle">
+                <span class="key">1</span><span><strong>Idle</strong><small>Relaxed cup movement, blink</small></span><span class="duration">4.0s</span>
+              </button>
+              <button class="animation" type="button" data-animation="cheers">
+                <span class="key">2</span><span><strong>Cheers</strong><small>Lift the arm, raise a toast</small></span><span class="duration">3.6s</span>
+              </button>
+              <button class="animation" type="button" data-animation="sip">
+                <span class="key">3</span><span><strong>Sip</strong><small>Cup to lips, drink, lower</small></span><span class="duration">4.8s</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="playback">
+            <div class="section-heading"><h2>Playback</h2><button id="restart" class="text-button" type="button">Restart</button></div>
+            <div class="transport">
+              <button id="playPause" class="round" type="button" aria-label="Pause animation">Ⅱ</button>
+              <label>Speed <input id="speed" type="range" min="0.25" max="1.75" step="0.05" value="1" /><output id="speedValue">1.00×</output></label>
+            </div>
+            <label class="range-row">Transition mix <input id="mix" type="range" min="0" max="0.8" step="0.05" value="0.3" /><output id="mixValue">0.30s</output></label>
+            <label class="range-row">Scrub pose <input id="scrub" type="range" min="0" max="100" step="0.1" value="0" /></label>
+            <label class="switch-row"><span><strong>Auto cycle</strong><small>Changes state at each loop boundary</small></span><input id="autoCycle" type="checkbox" /></label>
+            <label class="switch-row"><span><strong>Bone overlay</strong><small>Inspect the runtime rig</small></span><input id="debug" type="checkbox" /></label>
+          </section>
+
+          <section class="transition-map">
+            <div class="section-heading"><h2>Transition check</h2><span>Shared neutral pose</span></div>
+            <div class="map"><span>Idle</span><i>↔</i><span>Cheers</span><i>↔</i><span>Sip</span></div>
+            <p>Every clip starts and finishes on the same registered pose. Switching mid-motion uses the mix above.</p>
+          </section>
+
+          <section class="event-panel">
+            <div class="section-heading"><h2>Event log</h2><button id="clearLog" class="text-button" type="button">Clear</button></div>
+            <ol id="eventLog" aria-live="polite"></ol>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./vendor/pixi-8.20.1.min.js"></script>
+    <script src="./vendor/spine-pixi-v8-4.3.13.min.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "requests": [
+    {
+      "prompt": "Using the reference image, render ONLY the ODYSSEUS TAVERN logo in isolation. Match the EXACT typography of the original: the word 'ODYSSEUS' in BIG UPPERCASE block letters with jagged flame-like edges and a molten-gold-to-dark-orange gradient (the brushed metallic fantasy font from the reference), NOT cursive script. Below it, a horizontal weathered wooden plank sign with the word 'TAVERN' carved into it in dark serif uppercase letters, and a small gold ship's-wheel ornament at the right end of the plank. Plain solid background (we'll strip it later). Centered, generous padding. Same warm gold + brown palette as the source. No cape, no characters, no slot machine, no flames, no scenery.",
+      "input_urls": ["https://matrix-internal.oss-us-east-1.aliyuncs.com/user_file_upload_tmp%2F2026-09-15%2F5b3a89f8-7201-48b4-a8c6-97bbcb70b071.png?x-oss-credential=LTAI5t9dXq2sLrMZ8f1XfiFZ%2F20260915%2Fus-east-1%2Foss%2Faliyun_v4_request&x-oss-date=20260915T083138Z&x-oss-expires=3600&x-oss-signature=d28fe09ec4666a2f3b8c80e01588bc2842dd0560e6c675063f84532cf60c30be&x-oss-signature-version=OSS4-HMAC-SHA256"],
+      "aspect_ratio": "16:9",
+      "resolution": "2K",
+      "output_file": "odysseus_tavern_logo_v4.png"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "revision": 3,
+  "arm": "shoulder > elbow > wrist > goblet",
+  "backing": "imagegen reconstruction; source sheet arm and face attachments",
+  "loop": "All rotation timelines return exactly to setup; no physics",
+  "sipLip": [
+    482,
+    205
+  ]
+}
